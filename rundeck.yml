@@ -23,15 +23,23 @@
     - name: Package installation
       yum:
         name:
-        - java-1.8.0-openjdk
-        - rundeck
-        - rundeck-cli
-        - epel-release
-        - postgresql10-server
-        - python-psycopg2
+          - epel-release
+          - java-1.8.0-openjdk
+          - rundeck
+          - rundeck-cli
+          - postgresql10-server
+          - postgresql10-contrib
+          - postgresql10-devel
+          - python2-pip
+          - python2-psycopg2
         state: present
-    
-    - name: PostgresQL | Init server
+
+    - pip:
+        name:
+          - boto3
+          - awscli
+
+    - name: PostgreSQL | Init server
       command: /usr/pgsql-10/bin/postgresql-10-setup initdb
       ignore_errors: yes
 
