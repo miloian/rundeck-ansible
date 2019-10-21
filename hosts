@@ -1,0 +1,2 @@
+[all]
+ansible-test ansible_host=192.168.1.206 ansible_ssh_extra_args='-o StrictHostKeyChecking=no'

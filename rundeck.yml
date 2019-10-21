@@ -1,0 +1,135 @@
+---
+- name: Install Rundeck
+  hosts: all
+  gather_facts: true
+  remote_user: root
+  sudo: yes
+  tasks:
+
+    - name: Add EPEL Repo
+      yum:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        state: present
+
+    - name: Add Postgres Repo
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+
+    - name: Add Rundeck Repo
+      yum:
+        name: https://repo.rundeck.org/latest.rpm
+        state: present
+
+    - name: Package installation
+      yum:
+        name:
+        - java-1.8.0-openjdk
+        - rundeck
+        - epel-release
+        - postgresql10-server
+        - postgresql10
+        - python-psycopg2
+        state: present
+    
+    - name: PostgresQL | Init server
+      command: /usr/pgsql-10/bin/postgresql-10-setup initdb
+      ignore_errors: yes
+
+    - name: PostgreSQL | confgure MD5 for local users
+      become: true
+      become_user: postgres
+      lineinfile:
+        path: /var/lib/pgsql/10/data/pg_hba.conf
+        regexp: '^host    all             all             127.0.0.1/32'
+        line: host    all             all             127.0.0.1/32            password
+
+    - name: PostgreSQL | Create Rundeck Database
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: rundeck
+    
+    - name: PostgreSQL | Create Rundeck user
+      become: yes
+      become_user: postgres
+      postgresql_user:
+        name: rundeck
+        password: rundeck
+
+    - name: PostgreSQL | Grant rundeck user ALL on rundeck database
+      become: true
+      become_user: postgres
+      postgresql_privs:
+        db: postgres
+        privs: ALL
+        type: database
+        obj: rundeck
+        role: rundeck
+
+    - name: PostgreSQL | Start service
+      service:
+        name: postgresql-10.service
+        enabled: yes
+        state: restarted
+
+    - name: Set Framework server Name
+      lineinfile:
+        path: /etc/rundeck/framework.properties
+        regexp: '^framework.server.name'
+        line: framework.server.name = {{ ansible_host }}
+
+    - name: Set Framework server Hostname
+      lineinfile:
+        path: /etc/rundeck/framework.properties
+        regexp: '^framework.server.hostname'
+        line: framework.server.hostname = {{ ansible_host }}
+
+    - name: Set Framework server URL
+      lineinfile:
+        path: /etc/rundeck/framework.properties
+        regexp: '^framework.server.url'
+        line: framework.server.url = http://{{ ansible_host }}:4440
+
+    - name: Set Grails server URL
+      lineinfile:
+        path: /etc/rundeck/rundeck-config.properties
+        regexp: '^grails.serverURL'
+        line: grails.serverURL=http://{{ ansible_host }}:4440
+
+    - name: Set Postgres driver
+      lineinfile:
+        path: /etc/rundeck/rundeck-config.properties
+        regexp: '^dataSource.driverClassName'
+        line: dataSource.driverClassName = org.postgresql.Driver
+
+    - name: Set postgres URL
+      lineinfile:
+        path: /etc/rundeck/rundeck-config.properties
+        regexp: '^dataSource.url'
+        line: dataSource.url = jdbc:postgresql://localhost/rundeck
+
+    - name: Configure Postgres user
+      lineinfile:
+        path: /etc/rundeck/rundeck-config.properties
+        regexp: '^dataSource.username'
+        line: dataSource.username=rundeck
+
+    - name: Set Postgres password
+      lineinfile:
+        path: /etc/rundeck/rundeck-config.properties
+        regexp: '^dataSource.password'
+        line: dataSource.password=rundeck
+
+    - name: Start Rundeck
+      service:
+        name: rundeckd
+        enabled: yes
+        state: restarted
+    
+    - name: Allow Rundeck through Firewall
+      firewalld:
+        port: 4440/tcp
+        permanent: yes
+        zone: public
+        state: enabled
