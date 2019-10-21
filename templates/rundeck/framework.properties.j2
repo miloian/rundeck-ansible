@@ -1,0 +1,41 @@
+# framework.properties -
+#
+
+# ----------------------------------------------------------------
+# Rundeck server connection information
+# ----------------------------------------------------------------
+
+framework.server.name = {{ ansible_host }}
+framework.server.hostname = {{ ansible_host }}
+framework.server.port = 4440
+framework.server.url = http://{{ ansible_host }}:4440
+
+# ----------------------------------------------------------------
+# Installation locations
+# ----------------------------------------------------------------
+
+rdeck.base=/var/lib/rundeck
+
+framework.projects.dir=/var/lib/rundeck/projects
+framework.etc.dir=/etc/rundeck
+framework.var.dir=/var/lib/rundeck/var
+framework.tmp.dir=/var/lib/rundeck/var/tmp
+framework.logs.dir=/var/lib/rundeck/logs
+framework.libext.dir=/var/lib/rundeck/libext
+
+# ----------------------------------------------------------------
+# SSH defaults for node executor and file copier
+# ----------------------------------------------------------------
+
+framework.ssh.keypath = /var/lib/rundeck/.ssh/id_rsa
+framework.ssh.user = rundeck
+
+# ssh connection timeout after a specified number of milliseconds.
+# "0" value means wait forever.
+framework.ssh.timeout = 0
+
+
+# ----------------------------------------------------------------
+# Auto generated server UUID: 6fadbee5-9575-4de2-a514-7af850e72627
+# ----------------------------------------------------------------
+rundeck.server.uuid = 6fadbee5-9575-4de2-a514-7af850e72627

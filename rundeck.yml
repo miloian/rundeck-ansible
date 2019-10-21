@@ -38,23 +38,18 @@
     - name: PostgreSQL | wait for server to start
       command: sleep 5
 
+    - template:
+        src: templates/psql/pg_hba.conf.j2
+        dest: /var/lib/pgsql/10/data/pg_hba.conf
+        owner: postgres
+        group: postgres
+        mode: 0700
+
     - name: PostgreSQL | Start service
       service:
         name: postgresql-10.service
         enabled: yes
         state: restarted
-
-#    - name: PostgreSQL | confgure AUTH for local users
-#      postgresql_pg_hba:
-#        dest: /var/lib/pgsql/10/data/pg_hba.conf
-#        contype: host
-#        users: rundeck
-#        source: 127.0.0.1/32
-#        databases: rundeck
-#        method: password
-#        create: true
-#      become: true
-#      become_user: postgres
 
     - name: PostgreSQL | Create Rundeck Database
       become: yes
@@ -79,53 +74,19 @@
         obj: rundeck
         role: rundeck
 
-    - name: Set Framework server Name
-      lineinfile:
-        path: /etc/rundeck/framework.properties
-        regexp: '^framework.server.name'
-        line: framework.server.name = {{ ansible_host }}
+    - template:
+        src: templates/rundeck/framework.properties.j2
+        dest: /etc/rundeck/framework.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
 
-    - name: Set Framework server Hostname
-      lineinfile:
-        path: /etc/rundeck/framework.properties
-        regexp: '^framework.server.hostname'
-        line: framework.server.hostname = {{ ansible_host }}
-
-    - name: Set Framework server URL
-      lineinfile:
-        path: /etc/rundeck/framework.properties
-        regexp: '^framework.server.url'
-        line: framework.server.url = http://{{ ansible_host }}:4440
-
-    - name: Set Grails server URL
-      lineinfile:
-        path: /etc/rundeck/rundeck-config.properties
-        regexp: '^grails.serverURL'
-        line: grails.serverURL=http://{{ ansible_host }}:4440
-
-    - name: Set Postgres driver
-      lineinfile:
-        path: /etc/rundeck/rundeck-config.properties
-        regexp: '^dataSource.driverClassName'
-        line: dataSource.driverClassName = org.postgresql.Driver
-
-    - name: Set postgres URL
-      lineinfile:
-        path: /etc/rundeck/rundeck-config.properties
-        regexp: '^dataSource.url'
-        line: dataSource.url = jdbc:postgresql://localhost/rundeck
-
-    - name: Configure Postgres user
-      lineinfile:
-        path: /etc/rundeck/rundeck-config.properties
-        regexp: '^dataSource.username'
-        line: dataSource.username=rundeck
-
-    - name: Set Postgres password
-      lineinfile:
-        path: /etc/rundeck/rundeck-config.properties
-        regexp: '^dataSource.password'
-        line: dataSource.password=rundeck
+    - template:
+        src: templates/rundeck/rundeck-config.properties.j2
+        dest: /etc/rundeck/rundeck-config.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
 
     - name: Start Rundeck
       service:
