@@ -28,7 +28,7 @@
         - epel-release
         - postgresql10-server
         - postgresql10
-        - python3-psycopg2
+        - python-psycopg2
         state: present
     
     - name: PostgresQL | Init server
@@ -44,16 +44,17 @@
         enabled: yes
         state: restarted
 
-    - name: PostgreSQL | confgure AUTH for local users
-      postgresql_pg_hba:
-        dest: /var/lib/pgsql/10/data/pg_hba.conf
-        contype: host
-        users: rundeck
-        source: 127.0.0.1/32
-        databases: rundeck
-        method: password
-      become: true
-      become_user: postgres
+#    - name: PostgreSQL | confgure AUTH for local users
+#      postgresql_pg_hba:
+#        dest: /var/lib/pgsql/10/data/pg_hba.conf
+#        contype: host
+#        users: rundeck
+#        source: 127.0.0.1/32
+#        databases: rundeck
+#        method: password
+#        create: true
+#      become: true
+#      become_user: postgres
 
     - name: PostgreSQL | Create Rundeck Database
       become: yes
@@ -139,6 +140,4 @@
         state: enabled
 
     - name: Bounce firewalld
-      service:
-        name: firewalld
-        state: restarted
+      command: firewall-cmd --reload
