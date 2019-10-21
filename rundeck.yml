@@ -114,6 +114,30 @@
       become: true
       become_user: rundeck
 
+    - template:
+        src: templates/rundeck/bash_profile.j2
+        dest: /var/lib/rundeck/.bash_profile
+        owner: rundeck
+        group: rundeck
+        mode: 0644
+        backup: yes
+
+    - name: Create Scripts folder
+      file:
+        path: /var/lib/rundeck/scripts
+        state: directory
+        owner: rundeck
+        group: rundeck
+        mode: '0755'
+
+    - name: Copy commands.py script for startup and shutdown of EC2 nodes
+      copy:
+        src: files/rundeck/command.py
+        dest: /var/lib/rundeck/scripts/command.py
+        owner: rundeck
+        group: rundeck
+        mode: '0755'
+
     - name: Start Rundeck
       service:
         name: rundeckd

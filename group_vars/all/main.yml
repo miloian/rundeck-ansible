@@ -4,9 +4,15 @@
 # Please note: this is in plain text and should be changed afterward.
 # See: https://docs.rundeck.com/3.0.5/administration/security/authenticating-users.html#jetty-and-jaas-authentication
 rd_admin_pw: 6ftxg29UnJ3jsqj8
+rd_admin_user: admin
 
 # Rundeck Database settings for dbname, role name, role password
 # PostgreSQL right now
 rd_db_name: rundeck
 rd_db_user: rundeckuser
 rd_db_password: PbUucC7NpTrrd2A4
+
+# AWS CLI Config
+# WARNING: BE CAREFUL WITH THESE VALUES DO NOT COMMIT THEM TO GIT
+aws_access_key: CHANGEME
+aws_secret_key: CHANGEME
