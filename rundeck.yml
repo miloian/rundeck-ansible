@@ -3,7 +3,6 @@
   hosts: all
   gather_facts: true
   remote_user: root
-  sudo: yes
   tasks:
 
     - name: Add EPEL Repo
@@ -36,7 +35,13 @@
       command: /usr/pgsql-10/bin/postgresql-10-setup initdb
       ignore_errors: yes
 
-    - name: PostgreSQL | confgure MD5 for local users
+    - name: PostgreSQL | Start service
+      service:
+        name: postgresql-10.service
+        enabled: yes
+        state: restarted
+
+    - name: PostgreSQL | confgure AUTH for local users
       become: true
       become_user: postgres
       lineinfile:
@@ -66,12 +71,6 @@
         type: database
         obj: rundeck
         role: rundeck
-
-    - name: PostgreSQL | Start service
-      service:
-        name: postgresql-10.service
-        enabled: yes
-        state: restarted
 
     - name: Set Framework server Name
       lineinfile:
@@ -130,6 +129,10 @@
     - name: Allow Rundeck through Firewall
       firewalld:
         port: 4440/tcp
-        permanent: yes
-        zone: public
+        permanent: true
         state: enabled
+
+    - name: Bounce firewalld
+      service:
+        name: firewalld
+        state: restarted
