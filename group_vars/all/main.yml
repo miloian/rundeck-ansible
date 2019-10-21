@@ -1,0 +1,12 @@
+---
+
+# Password for Admin user.
+# Please note: this is in plain text and should be changed afterward.
+# See: https://docs.rundeck.com/3.0.5/administration/security/authenticating-users.html#jetty-and-jaas-authentication
+rd_admin_pw: 6ftxg29UnJ3jsqj8
+
+# Rundeck Database settings for dbname, role name, role password
+# PostgreSQL right now
+rd_db_name: rundeck
+rd_db_user: rundeckuser
+rd_db_password: PbUucC7NpTrrd2A4

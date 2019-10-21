@@ -25,9 +25,9 @@
         name:
         - java-1.8.0-openjdk
         - rundeck
+        - rundeck-cli
         - epel-release
         - postgresql10-server
-        - postgresql10
         - python-psycopg2
         state: present
     
@@ -35,7 +35,7 @@
       command: /usr/pgsql-10/bin/postgresql-10-setup initdb
       ignore_errors: yes
 
-    - name: PostgreSQL | wait for server to start
+    - name: PostgreSQL | wait for server to init
       command: sleep 5
 
     - template:
@@ -55,14 +55,14 @@
       become: yes
       become_user: postgres
       postgresql_db:
-        name: rundeck
+        name: "{{ rd_db_name }}"
     
     - name: PostgreSQL | Create Rundeck user
       become: yes
       become_user: postgres
       postgresql_user:
-        name: rundeck
-        password: rundeck
+        name: "{{ rd_db_user }}"
+        password: "{{ rd_db_password }}"
 
     - name: PostgreSQL | Grant rundeck user ALL on rundeck database
       become: true
@@ -71,8 +71,8 @@
         db: postgres
         privs: ALL
         type: database
-        obj: rundeck
-        role: rundeck
+        obj: "{{ rd_db_name }}"
+        role: "{{ rd_db_user }}"
 
     - template:
         src: templates/rundeck/framework.properties.j2
@@ -80,6 +80,7 @@
         owner: rundeck
         group: rundeck
         mode: 0640
+        backup: yes
 
     - template:
         src: templates/rundeck/rundeck-config.properties.j2
@@ -87,6 +88,23 @@
         owner: rundeck
         group: rundeck
         mode: 0640
+        backup: yes
+
+    - template:
+        src: templates/rundeck/realm.properties.j2
+        dest: /etc/rundeck/realm.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
+        backup: yes
+
+    - name: Install AWS EC2 Nodes rundeck plugin
+      get_url:
+        url: https://github.com/rundeck-plugins/rundeck-ec2-nodes-plugin/releases/download/v1.5.12/rundeck-ec2-nodes-plugin-1.5.12.jar
+        dest: /var/lib/rundeck/libext/rundeck-ec2-nodes-plugin-1.5.12.jar
+        mode: 0644
+      become: true
+      become_user: rundeck
 
     - name: Start Rundeck
       service:

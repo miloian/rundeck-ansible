@@ -7,10 +7,10 @@ rss.enabled=false
 # change hostname here
 grails.serverURL=http://{{ ansible_host }}:4440
 dataSource.dbCreate = update
-dataSource.url = jdbc:postgresql://localhost/rundeck
+dataSource.url = jdbc:postgresql://localhost/{{ rd_db_name }}
 dataSource.driverClassName = org.postgresql.Driver
-dataSource.username=rundeck
-dataSource.password=rundeck
+dataSource.username={{ rd_db_user }}
+dataSource.password={{ rd_db_password }}
 
 # Encryption for key storage
 rundeck.storage.provider.1.type=db
