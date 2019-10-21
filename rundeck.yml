@@ -28,12 +28,15 @@
         - epel-release
         - postgresql10-server
         - postgresql10
-        - python-psycopg2
+        - python3-psycopg2
         state: present
     
     - name: PostgresQL | Init server
       command: /usr/pgsql-10/bin/postgresql-10-setup initdb
       ignore_errors: yes
+
+    - name: PostgreSQL | wait for server to start
+      command: sleep 5
 
     - name: PostgreSQL | Start service
       service:
@@ -42,12 +45,15 @@
         state: restarted
 
     - name: PostgreSQL | confgure AUTH for local users
+      postgresql_pg_hba:
+        dest: /var/lib/pgsql/10/data/pg_hba.conf
+        contype: host
+        users: rundeck
+        source: 127.0.0.1/32
+        databases: rundeck
+        method: password
       become: true
       become_user: postgres
-      lineinfile:
-        path: /var/lib/pgsql/10/data/pg_hba.conf
-        regexp: '^host    all             all             127.0.0.1/32'
-        line: host    all             all             127.0.0.1/32            password
 
     - name: PostgreSQL | Create Rundeck Database
       become: yes
