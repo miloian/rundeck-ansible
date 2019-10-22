@@ -5,39 +5,59 @@
   remote_user: root
   tasks:
 
-    - name: Add EPEL Repo
+    - name: Package installation (base)
       yum:
-        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        name:
+          - java-1.8.0-openjdk
         state: present
-
-    - name: Add Postgres Repo
-      yum:
-        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-        state: present
+      tags: yum
 
     - name: Add Rundeck Repo
       yum:
         name: https://repo.rundeck.org/latest.rpm
         state: present
+      tags: yum
 
-    - name: Package installation
+    - name: Package installation (rundeck)
       yum:
         name:
-          - epel-release
-          - java-1.8.0-openjdk
           - rundeck
           - rundeck-cli
-          - postgresql10-server
-          - postgresql10-contrib
-          - postgresql10-devel
+        state: present
+      tags: yum
+
+    - name: Add EPEL Repo
+      yum:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        state: present
+      tags: yum
+
+    - name: Package installation (epel)
+      yum:
+        name:
           - python2-pip
           - python2-psycopg2
         state: present
+      tags: yum
+
+    - name: Add Postgres Repo
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+      tags: yum
+
+    - name: Package installation (postgres)
+      yum:
+        name:
+          - postgresql10-server
+        state: present
+      tags: yum
 
     - pip:
         name:
           - boto3
           - awscli
+      tags: yum
 
     - name: PostgreSQL | Init server
       command: /usr/pgsql-10/bin/postgresql-10-setup initdb
@@ -143,7 +163,7 @@
         name: rundeckd
         enabled: yes
         state: restarted
-    
+
     - name: Allow Rundeck through Firewall
       firewalld:
         port: 4440/tcp
@@ -152,3 +172,74 @@
 
     - name: Bounce firewalld
       command: firewall-cmd --reload
+
+    - name: Wait for Rundeck to start
+      command: sleep 60
+
+    - name: Create Project
+      shell: source /var/lib/rundeck/.bash_profile && rd projects create -p "{{ rd_project_name }}"
+      become: true
+      become_user: rundeck
+      args:
+        executable: /bin/bash
+      tags: project
+
+    - name: Copy Rundeck project config
+      template:
+        src: templates/rundeck/config.properties.j2
+        dest: /tmp/config.properties
+        owner: rundeck
+        group: rundeck
+        mode: '0755'
+      tags: project
+
+    - name: Configure project
+      shell: source /var/lib/rundeck/.bash_profile && rd projects configure set -p "{{ rd_project_name }}" -F properties -f /tmp/config.properties
+      tags: project
+
+    - name: Remove job config file
+      file:
+        path: /tmp/config.properties
+        state: absent
+      tags: project
+
+    - name: Create temporary jobs folder
+      file:
+        path: /tmp/rd_jobs
+        state: directory
+        owner: rundeck
+        group: rundeck
+        mode: '0777'
+      tags: project
+
+    - name: Copy jobs to server
+      copy:
+        src: "{{ item }}"
+        dest: /tmp/rd_jobs/
+        owner: rundeck
+        group: rundeck
+        mode: '0777'
+      with_fileglob:
+        - files/rundeck/jobs/*.yaml
+      tags: project
+    
+    - name: Find jobs in server directory
+      shell: find /tmp/rd_jobs/ -type f -name *.yaml
+      register: rundeck_jobs
+      tags: project
+
+    - name: Import jobs to Rundeck Project
+      shell: source /var/lib/rundeck/.bash_profile && rd jobs load -f "{{ item }}" -F yaml -p "{{ rd_project_name }}" -r
+      become: true
+      become_user: rundeck
+      args:
+        executable: /bin/bash
+      with_items: "{{ rundeck_jobs.stdout_lines }}"
+      tags: project
+
+    - name: Clean up after Rundeck jobs import
+      file:
+        path: /tmp/rd_jobs/
+        state: absent
+      tags: project
+

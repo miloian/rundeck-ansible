@@ -1,6 +1,6 @@
 ---
 
-# Password for Admin user.
+# Password for rundeck admin user.
 # Please note: this is in plain text and should be changed afterward.
 # See: https://docs.rundeck.com/3.0.5/administration/security/authenticating-users.html#jetty-and-jaas-authentication
 rd_admin_pw: admin
@@ -12,7 +12,11 @@ rd_db_name: rundeck
 rd_db_user: rundeckuser
 rd_db_password: rundeck 
 
-# AWS CLI Config
-# WARNING: BE CAREFUL WITH THESE VALUES DO NOT COMMIT THEM TO GIT
-aws_access_key: CHANGEME
-aws_secret_key: CHANGEME
+# Rundeck app settings
+rd_project_name: "test"
+rd_project_description: "Test Description"
+rd_project_ssh_keypath: /var/lib/rundeck/.ssh/id_rsa
+
+# AWS ARN for EC2 node access
+rd_project_arn: test_arn
+
