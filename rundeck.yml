@@ -2,27 +2,13 @@
 - name: Install Rundeck
   hosts: all
   gather_facts: true
-  remote_user: root
+  remote_user: centos 
+  become: yes
   tasks:
-
-    - name: Package installation (base)
-      yum:
-        name:
-          - java-1.8.0-openjdk
-        state: present
-      tags: yum
 
     - name: Add Rundeck Repo
       yum:
         name: https://repo.rundeck.org/latest.rpm
-        state: present
-      tags: yum
-
-    - name: Package installation (rundeck)
-      yum:
-        name:
-          - rundeck
-          - rundeck-cli
         state: present
       tags: yum
 
@@ -32,28 +18,27 @@
         state: present
       tags: yum
 
-    - name: Package installation (epel)
-      yum:
-        name:
-          - python2-pip
-          - python2-psycopg2
-        state: present
-      tags: yum
-
     - name: Add Postgres Repo
       yum:
         name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
         state: present
       tags: yum
 
-    - name: Package installation (postgres)
+    - name: Package installation (base)
       yum:
         name:
+          - java-1.8.0-openjdk
+          - rundeck
+          - rundeck-cli
+          - epel-release
+          - python2-pip
+          - python2-psycopg2
           - postgresql10-server
         state: present
       tags: yum
 
-    - pip:
+    - name: Install pip packages
+      pip:
         name:
           - boto3
           - awscli
@@ -169,9 +154,11 @@
         port: 4440/tcp
         permanent: true
         state: enabled
+      ignore_errors: yes
 
     - name: Bounce firewalld
       command: firewall-cmd --reload
+      ignore_errors: yes
 
     - name: Wait for Rundeck to start
       command: sleep 60

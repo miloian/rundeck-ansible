@@ -15,7 +15,6 @@ project.ssh-command-timeout=0
 project.ssh-connect-timeout=0
 project.ssh-keypath={{ rd_project_ssh_keypath }}
 resources.source.1.type=local
-resources.source.2.config.assumeRoleArn={{ rd_project_arn }}
 resources.source.2.config.filter=tag\:rundeck\=true
 resources.source.2.config.httpProxyPort=80
 resources.source.2.config.mappingParams=tags.selector\=tags/Environment;hostname.selector\=privateDnsName,privateIpAddress

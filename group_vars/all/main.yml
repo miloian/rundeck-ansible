@@ -17,6 +17,3 @@ rd_project_name: "test"
 rd_project_description: "Test Description"
 rd_project_ssh_keypath: /var/lib/rundeck/.ssh/id_rsa
 
-# AWS ARN for EC2 node access
-rd_project_arn: test_arn
-

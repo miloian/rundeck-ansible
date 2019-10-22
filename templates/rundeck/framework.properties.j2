@@ -5,10 +5,10 @@
 # Rundeck server connection information
 # ----------------------------------------------------------------
 
-framework.server.name = {{ ansible_host }}
-framework.server.hostname = {{ ansible_host }}
+framework.server.name = {{ ansible_default_ipv4.address }}
+framework.server.hostname = {{ ansible_default_ipv4.address }}
 framework.server.port = 4440
-framework.server.url = http://{{ ansible_host }}:4440
+framework.server.url = http://{{ ansible_default_ipv4.address }}:4440
 
 # ----------------------------------------------------------------
 # Installation locations
