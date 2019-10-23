@@ -1,0 +1,44 @@
+---
+
+    - name: Add Postgres Repo
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+
+    - name: Install Postgres GPG Key
+      rpm_key:
+        state: present
+        key: https://ftp.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+
+    - name: Package installation
+      yum:
+        name:
+          - postgresql10-server
+        state: present
+
+    - name: PostgreSQL | Init server
+      command: /usr/pgsql-10/bin/postgresql-10-setup initdb
+      ignore_errors: yes
+
+    - name: PostgreSQL | wait for server to init
+      command: sleep 3
+
+    - template:
+        src: pg_hba.conf.j2
+        dest: /var/lib/pgsql/10/data/pg_hba.conf
+        owner: postgres
+        group: postgres
+        mode: 0700
+
+    - name: PostgreSQL | Start service
+      service:
+        name: postgresql-10.service
+        enabled: yes
+        state: restarted
+
+    - name: Wait for database to come up
+      wait_for:
+        host: localhost
+        port: 5432
+        delay: 5
+        timeout: 300

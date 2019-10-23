@@ -1,0 +1,6 @@
+check process rundeck with pidfile /run/rundeckd.pid
+    start program = "/usr/sbin/service rundeckd start" with timeout 60 seconds
+    stop program  = "/usr/sbin/service rundeckd stop"
+    depends on nginx
+#    depends on postgresql
+    if failed host 127.0.0.1 port 4440 protocol http request "/user/login" status = 200 timeout 1 seconds for 3 cycles then restart

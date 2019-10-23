@@ -1,0 +1,11 @@
+---
+- hosts: all
+  gather_facts: true
+  remote_user: root
+  become: yes
+  roles:
+    - common
+    - postgres
+    - rundeck_install
+    - nginx
+    - rundeck_configure

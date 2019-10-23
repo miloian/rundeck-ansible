@@ -1,0 +1,49 @@
+#loglevel.default is the default log level for jobs: ERROR,WARN,INFO,VERBOSE,DEBUG
+loglevel.default=INFO
+rdeck.base=/var/lib/rundeck
+
+#rss.enabled if set to true enables RSS feeds that are public (non-authenticated)
+rss.enabled=false
+# change hostname here
+{% if nginx|bool == true %}
+grails.serverURL=http://{{ rd_external_url }}
+{% else %}
+grails.serverURL=http://{{ rd_external_url }}:{{ rd_port }}
+{% endif %}
+dataSource.dbCreate = update
+{% if database|bool == true %}
+dataSource.url = jdbc:postgresql://localhost/{{ rd_db_name }}
+dataSource.driverClassName = org.postgresql.Driver
+dataSource.username={{ rd_db_user }}
+dataSource.password={{ rd_db_password }}
+{% else %}
+dataSource.url = jdbc:h2:file:/var/lib/rundeck/data/rundeckdb;MVCC=true
+{% endif %}
+
+# Encryption for key storage
+rundeck.storage.provider.1.type=db
+rundeck.storage.provider.1.path=keys
+
+rundeck.storage.converter.1.type=jasypt-encryption
+rundeck.storage.converter.1.path=keys
+rundeck.storage.converter.1.config.encryptorType=custom
+rundeck.storage.converter.1.config.password=1e6faf5cd422ed67
+rundeck.storage.converter.1.config.algorithm=PBEWITHSHA256AND128BITAES-CBC-BC
+rundeck.storage.converter.1.config.provider=BC
+
+# Encryption for project config storage
+rundeck.projectsStorageType=db
+
+rundeck.config.storage.converter.1.type=jasypt-encryption
+rundeck.config.storage.converter.1.path=projects
+rundeck.config.storage.converter.1.config.password=1e6faf5cd422ed67
+rundeck.config.storage.converter.1.config.encryptorType=custom
+rundeck.config.storage.converter.1.config.algorithm=PBEWITHSHA256AND128BITAES-CBC-BC
+rundeck.config.storage.converter.1.config.provider=BC
+
+rundeck.log4j.config.file = /etc/rundeck/log4j.properties
+
+rundeck.feature.repository.enabled=true
+{% if nginx|bool == true %}
+server.useForwardHeaders=true
+{% endif %}

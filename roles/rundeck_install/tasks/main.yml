@@ -1,0 +1,116 @@
+---
+
+    - name: Add Rundeck Repo
+      yum:
+        name: https://repo.rundeck.org/latest.rpm
+        state: present
+      tags: yum
+
+    - name: Install Rundeck GPG Key
+      rpm_key:
+        state: present
+        key: https://rundeck.org/keys/BUILD-GPG-KEY-Rundeck.org.key
+      tags: yum
+
+    - name: Package installation
+      yum:
+        name:
+          - rundeck
+          - rundeck-cli
+        state: present
+
+    - name: Create Rundeck Database
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: "{{ rd_db_name }}"
+
+    - name: Create Rundeck user
+      become: yes
+      become_user: postgres
+      postgresql_user:
+        name: "{{ rd_db_user }}"
+        password: "{{ rd_db_password }}"
+
+    - name: Grant rundeck user ALL on rundeck database
+      become: yes
+      become_user: postgres
+      postgresql_privs:
+        db: postgres
+        privs: ALL
+        type: database
+        obj: "{{ rd_db_name }}"
+        role: "{{ rd_db_user }}"
+
+    - name: Install Rundeck framework.properties
+      template:
+        src: framework.properties.j2
+        dest: /etc/rundeck/framework.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
+        backup: yes
+
+    - name: Install Rundeck config.properties
+      template:
+        src: templates/rundeck/rundeck-config.properties.j2
+        dest: /etc/rundeck/rundeck-config.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
+        backup: yes
+
+    - name: Install Rundeck realm.properties
+      template:
+        src: templates/rundeck/realm.properties.j2
+        dest: /etc/rundeck/realm.properties
+        owner: rundeck
+        group: rundeck
+        mode: 0640
+        backup: yes
+
+    - name: Install AWS EC2 Nodes rundeck plugin
+      get_url:
+        url: https://github.com/rundeck-plugins/rundeck-ec2-nodes-plugin/releases/download/v1.5.12/rundeck-ec2-nodes-plugin-1.5.12.jar
+        dest: /var/lib/rundeck/libext/rundeck-ec2-nodes-plugin-1.5.12.jar
+        mode: 0644
+      become: true
+      become_user: rundeck
+
+    - name: Install Rundeck user bash_profile
+      template:
+        src: bash_profile.j2
+        dest: /var/lib/rundeck/.bash_profile
+        owner: rundeck
+        group: rundeck
+        mode: 0644
+        backup: yes
+
+    - name: Create Scripts folder
+      file:
+        path: /var/lib/rundeck/scripts
+        state: directory
+        owner: rundeck
+        group: rundeck
+        mode: '0755'
+
+    - name: Copy commands.py script for startup and shutdown of EC2 nodes
+      copy:
+        src: command.py
+        dest: /var/lib/rundeck/scripts/command.py
+        owner: rundeck
+        group: rundeck
+        mode: '0755'
+
+    - name: Start Rundeck
+      service:
+        name: rundeckd
+        enabled: yes
+        state: restarted
+
+    - name: Wait for Rundeck to start
+      wait_for:
+        host: "{{ rd_internal_url }}"
+        port: "{{ rd_port }}"
+        delay: 10
+        state: present

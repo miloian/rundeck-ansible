@@ -77,6 +77,7 @@
           - python2-psycopg2
           - postgresql10-server
           - nginx
+          - monit
         state: present
       tags: yum
 
@@ -210,8 +211,9 @@
         state: enabled
         immediate: yes
       with_items:
-        - 4440/tcp
+        - 443/tcp
         - 80/tcp
+        - 2812/tcp
       ignore_errors: yes
 
     - name: Wait for Rundeck to start
@@ -308,3 +310,19 @@
         enabled: yes
         state: restarted
       tags: nginx
+
+    - name: Copy monit files
+      copy:
+        src: "{{ item }}"
+        dest: /etc/monit.d/
+        owner: root
+        group: root
+        mode: '0644'
+      with_fileglob:
+        - files/monit/*
+
+    - name: Start monit
+      service:
+        name: monit
+        enabled: yes
+        state: restarted

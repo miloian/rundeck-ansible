@@ -1,0 +1,47 @@
+- defaultTab: nodes
+  description: ''
+  executionEnabled: true
+  id: 363b5184-8aa3-4b02-b5f2-894a99e9c0a4
+  loglevel: INFO
+  name: MONIT - Stop Processes
+  nodeFilterEditable: false
+  nodefilters:
+    dispatch:
+      excludePrecedence: true
+      keepgoing: false
+      rankOrder: ascending
+      successOnEmptyNodeFilter: false
+      threadcount: '1'
+    filter: ${node.name}
+  nodesSelectedByDefault: true
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - script: |-
+        #!/bin/bash
+
+        sudo monit stop all
+
+        COUNTER=1
+
+        while true; do
+                CHECK=$(sudo monit -B summary|grep "OK")
+
+                if [ "$CHECK" == "" ]; then
+                        echo "SUCCESS"
+                        break
+                else
+                        if [[ $COUNTER == 30 ]]; then
+                                echo ERROR: services are taking too long to shut down. 1>&2
+                                exit 1
+                        else
+                        let COUNTER=COUNTER+1
+                        fi
+                fi
+
+                sleep 10
+        done
+    keepgoing: false
+    strategy: node-first
+  uuid: 363b5184-8aa3-4b02-b5f2-894a99e9c0a4
+

@@ -1,0 +1,28 @@
+---
+
+    - name: Package installation
+      yum:
+        name:
+          - nginx
+        state: present
+
+    - name: Install nginx template
+      template:
+        src: templates/nginx/rundeck.conf.j2
+        dest: /etc/nginx/conf.d/rundeck.conf
+        owner: root
+        group: root
+        mode: '0644'
+      tags: nginx
+
+    - name: Allow Nginx to connect to Rundeck with SElinux
+      shell: setsebool -P httpd_can_network_connect=1
+      become: yes
+      tags: nginx
+
+    - name: Start Nginx
+      service:
+        name: nginx
+        enabled: yes
+        state: restarted
+      tags: nginx

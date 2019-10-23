@@ -1,0 +1,42 @@
+---
+    - name: Add EPEL Repo
+      yum:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        state: present
+
+    - name: Install EPEL GPG Key
+      rpm_key:
+        state: present
+        key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+
+    - name: Install EPEL Repo
+      yum:
+        name:
+          - epel-release
+        state: present
+
+    - name: Package installation
+      yum:
+        name:
+          - java-1.8.0-openjdk
+          - python-pip
+          - python-psycopg2
+        state: present
+
+    - name: Install pip packages
+      pip:
+        name:
+          - boto3
+          - awscli
+
+    - name: Configure firewalld
+      firewalld:
+        port: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: yes
+      with_items:
+        - 443/tcp
+        - 80/tcp
+        - 2812/tcp
+      ignore_errors: yes
