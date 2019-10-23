@@ -5,11 +5,17 @@
 # Rundeck server connection information
 # ----------------------------------------------------------------
 
-framework.server.name = {{ ansible_default_ipv4.address }}
-framework.server.hostname = {{ ansible_default_ipv4.address }}
-framework.server.port = 4440
-framework.server.url = http://{{ ansible_default_ipv4.address }}:4440
-
+{% if nginx|bool == true %}
+framework.server.name = {{ rd_internal_url }}
+framework.server.hostname = {{ rd_internal_url }}
+framework.server.port = {{ rd_port }}
+framework.server.url = http://{{ rd_internal_url }}:{{ rd_port }}
+{% else %}
+framework.server.name = {{ rd_external_url }}
+framework.server.hostname = {{ rd_external_url }}
+framework.server.port = {{ rd_port }}
+framework.server.url = http://{{ rd_external_url }}:{{ rd_port }}
+{% endif %}
 # ----------------------------------------------------------------
 # Installation locations
 # ----------------------------------------------------------------

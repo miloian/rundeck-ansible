@@ -1,0 +1,78 @@
+{% if ssl|bool ==  true %}
+{% raw %}
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    # redirect all HTTP requests to HTTPS with a 301 Moved Permanently response.
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    # certs sent to the client in SERVER HELLO are concatenated in ssl_certificate
+    ssl_certificate /etc/letsencrypt/live/rundeck.em-us-cms.cloud/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/rundeck.em-us-cms.cloud/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    # curl https://ssl-config.mozilla.org/ffdhe2048.txt > /path/to/dhparam.pem
+    ssl_dhparam /etc/nginx/dhparam.pem;
+
+    # intermediate configuration
+    ssl_protocols TLSv1.2;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (ngx_http_headers_module is required) (63072000 seconds)
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    # verify chain of trust of OCSP response using Root CA and Intermediate certs
+    #ssl_trusted_certificate /etc/nginx/ca-bundled.crt;
+
+    # replace with the IP address of your resolver
+    resolver 127.0.0.1;
+
+    location / {
+            #add_header Front-End-Https on;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            #proxy_pass http://rundeck.em-us-cms.cloud:4440;
+            proxy_pass http://127.0.0.1:4440;
+            proxy_read_timeout 90;
+
+            #proxy_redirect http://rundeck.em-us-cms.cloud:4440 https://rundeck.em-us-cms.cloud; # Replace it with your Subdomain
+            proxy_redirect http://rundeck.em-us-cms.cloud:4440 https://rundeck.em-us-cms.cloud; # Replace it with your Subdomain
+    }
+
+}
+{% endraw %}
+{% else %}
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name	{{ ansible_host }};
+
+    location / {
+            proxy_pass http://localhost:4440;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 90;
+    }
+}
+
+{% endif %}

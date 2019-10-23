@@ -12,8 +12,19 @@ rd_db_name: rundeck
 rd_db_user: rundeckuser
 rd_db_password: rundeck 
 
-# Rundeck app settings
+# Rundeck config
+# Set internal url to localhost when using nginx, otherwise, use the machines IP
+rd_internal_url: localhost
+# Set external URL to the public IP or external URL that nginx is set to. If not using nginx, use the machines IP
+rd_external_url: "{{ ansible_host }}"
+# Port Rundeck runs on default: 4440
+rd_port: 4440
+rd_grails_addr:
+# Rundeck project settings
 rd_project_name: "test"
 rd_project_description: "Test Description"
 rd_project_ssh_keypath: /var/lib/rundeck/.ssh/id_rsa
 
+ssl: false
+nginx: true
+database: true

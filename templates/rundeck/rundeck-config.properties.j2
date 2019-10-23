@@ -5,12 +5,20 @@ rdeck.base=/var/lib/rundeck
 #rss.enabled if set to true enables RSS feeds that are public (non-authenticated)
 rss.enabled=false
 # change hostname here
-grails.serverURL=http://{{ ansible_host }}:4440
+{% if nginx|bool == true %}
+grails.serverURL=http://{{ rd_external_url }}
+{% else %}
+grails.serverURL=http://{{ rd_external_url }}:{{ rd_port }}
+{% endif %}
 dataSource.dbCreate = update
+{% if database|bool == true %}
 dataSource.url = jdbc:postgresql://localhost/{{ rd_db_name }}
 dataSource.driverClassName = org.postgresql.Driver
 dataSource.username={{ rd_db_user }}
 dataSource.password={{ rd_db_password }}
+{% else %}
+dataSource.url = jdbc:h2:file:/var/lib/rundeck/data/rundeckdb;MVCC=true
+{% endif %}
 
 # Encryption for key storage
 rundeck.storage.provider.1.type=db
@@ -36,3 +44,6 @@ rundeck.config.storage.converter.1.config.provider=BC
 rundeck.log4j.config.file = /etc/rundeck/log4j.properties
 
 rundeck.feature.repository.enabled=true
+{% if nginx|bool == true %}
+server.useForwardHeaders=true
+{% endif %}

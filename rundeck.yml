@@ -2,9 +2,46 @@
 - name: Install Rundeck
   hosts: all
   gather_facts: true
-  remote_user: centos 
+  remote_user: root 
   become: yes
+
+  handlers:
+
+    - name: restart postgres
+      service:
+        name: postgresql-10.service
+        state: restarted
+
+    - name: restart rundeck
+      service:
+        name: rundeckd
+        state: restarted
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
   tasks:
+
+    - name: Add EPEL Repo
+      yum:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        state: present
+      tags: yum
+
+    - name: Install EPEL GPG Key
+      rpm_key:
+        state: present
+        key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+      tags: yum
+
+    - name: Install EPEL Repo
+      yum:
+        name:
+          - epel-release
+        state: present
+      tags: yum
 
     - name: Add Rundeck Repo
       yum:
@@ -12,10 +49,10 @@
         state: present
       tags: yum
 
-    - name: Add EPEL Repo
-      yum:
-        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    - name: Install Rundeck GPG Key
+      rpm_key:
         state: present
+        key: https://rundeck.org/keys/BUILD-GPG-KEY-Rundeck.org.key
       tags: yum
 
     - name: Add Postgres Repo
@@ -24,16 +61,22 @@
         state: present
       tags: yum
 
-    - name: Package installation (base)
+    - name: Install Postgres GPG Key
+      rpm_key:
+        state: present
+        key: https://ftp.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+      tags: yum
+
+    - name: Package installation
       yum:
         name:
           - java-1.8.0-openjdk
           - rundeck
           - rundeck-cli
-          - epel-release
           - python2-pip
           - python2-psycopg2
           - postgresql10-server
+          - nginx
         state: present
       tags: yum
 
@@ -49,7 +92,7 @@
       ignore_errors: yes
 
     - name: PostgreSQL | wait for server to init
-      command: sleep 5
+      command: sleep 3
 
     - template:
         src: templates/psql/pg_hba.conf.j2
@@ -63,6 +106,13 @@
         name: postgresql-10.service
         enabled: yes
         state: restarted
+
+    - name: Wait for database to come up
+      wait_for:
+        host: localhost
+        port: 5432
+        delay: 5
+        timeout: 300
 
     - name: PostgreSQL | Create Rundeck Database
       become: yes
@@ -87,7 +137,8 @@
         obj: "{{ rd_db_name }}"
         role: "{{ rd_db_user }}"
 
-    - template:
+    - name: Install Rundeck framework.properties
+      template:
         src: templates/rundeck/framework.properties.j2
         dest: /etc/rundeck/framework.properties
         owner: rundeck
@@ -95,7 +146,8 @@
         mode: 0640
         backup: yes
 
-    - template:
+    - name: Install Rundeck config.properties
+      template:
         src: templates/rundeck/rundeck-config.properties.j2
         dest: /etc/rundeck/rundeck-config.properties
         owner: rundeck
@@ -103,7 +155,8 @@
         mode: 0640
         backup: yes
 
-    - template:
+    - name: Install Rundeck realm.properties
+      template:
         src: templates/rundeck/realm.properties.j2
         dest: /etc/rundeck/realm.properties
         owner: rundeck
@@ -119,7 +172,8 @@
       become: true
       become_user: rundeck
 
-    - template:
+    - name: Install Rundeck user bash_profile
+      template:
         src: templates/rundeck/bash_profile.j2
         dest: /var/lib/rundeck/.bash_profile
         owner: rundeck
@@ -149,19 +203,23 @@
         enabled: yes
         state: restarted
 
-    - name: Allow Rundeck through Firewall
+    - name: Configure firewalld
       firewalld:
-        port: 4440/tcp
+        port: "{{ item }}"
         permanent: true
         state: enabled
-      ignore_errors: yes
-
-    - name: Bounce firewalld
-      command: firewall-cmd --reload
+        immediate: yes
+      with_items:
+        - 4440/tcp
+        - 80/tcp
       ignore_errors: yes
 
     - name: Wait for Rundeck to start
-      command: sleep 60
+      wait_for:
+        host: "{{ rd_internal_url }}" 
+        port: "{{ rd_port }}" 
+        delay: 10
+        state: present
 
     - name: Create Project
       shell: source /var/lib/rundeck/.bash_profile && rd projects create -p "{{ rd_project_name }}"
@@ -230,3 +288,23 @@
         state: absent
       tags: project
 
+    - name: Install nginx template
+      template:
+        src: templates/nginx/rundeck.conf.j2
+        dest: /etc/nginx/conf.d/rundeck.conf
+        owner: root
+        group: root
+        mode: '0644'
+      tags: nginx
+
+    - name: Allow Nginx to connect to Rundeck with SElinux
+      shell: setsebool -P httpd_can_network_connect=1
+      become: yes
+      tags: nginx
+
+    - name: Start Nginx
+      service:
+        name: nginx
+        enabled: yes
+        state: restarted
+      tags: nginx
