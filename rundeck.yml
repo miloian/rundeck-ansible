@@ -9,3 +9,4 @@
     - rundeck_install
     - nginx
     - rundeck_configure
+    - monit
