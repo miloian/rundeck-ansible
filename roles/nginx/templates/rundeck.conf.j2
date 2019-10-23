@@ -13,8 +13,8 @@ server {
     listen [::]:443 ssl http2;
 
     # certs sent to the client in SERVER HELLO are concatenated in ssl_certificate
-    ssl_certificate /etc/letsencrypt/live/rundeck.em-us-cms.cloud/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/rundeck.em-us-cms.cloud/privkey.pem;
+    ssl_certificate fullchain.pem;
+    ssl_certificate_key privkey.pem;
     ssl_session_timeout 1d;
     ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
     ssl_session_tickets off;
@@ -51,8 +51,8 @@ server {
             proxy_pass http://127.0.0.1:4440;
             proxy_read_timeout 90;
 
-            #proxy_redirect http://rundeck.em-us-cms.cloud:4440 https://rundeck.em-us-cms.cloud; # Replace it with your Subdomain
-            proxy_redirect http://rundeck.em-us-cms.cloud:4440 https://rundeck.em-us-cms.cloud; # Replace it with your Subdomain
+            #proxy_redirect  # Replace it with your Subdomain
+            proxy_redirect  # Replace it with your Subdomain
     }
 
 }
