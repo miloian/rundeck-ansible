@@ -28,6 +28,7 @@
         name:
           - boto3
           - awscli
+          - pexpect
 
     - name: Configure firewalld
       firewalld:
