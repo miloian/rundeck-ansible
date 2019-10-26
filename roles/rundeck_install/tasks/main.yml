@@ -71,6 +71,7 @@
       register: jetty_output
       become: yes
       become_user: rundeck
+      no_log: true
 
     - name: Install Rundeck realm.properties
       template:
@@ -80,6 +81,7 @@
         group: rundeck
         mode: 0640
         backup: yes
+      no_log: true
 
     - name: Install AWS EC2 Nodes rundeck plugin
       get_url:
