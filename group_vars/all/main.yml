@@ -27,6 +27,8 @@ rd_project_name: "test"
 rd_project_description: "Test Description"
 rd_project_ssh_keypath: /var/lib/rundeck/.ssh/id_rsa
 
+rd_ec2_plugin_url: https://github.com/rundeck-plugins/rundeck-ec2-nodes-plugin/releases/download/v1.5.12/rundeck-ec2-nodes-plugin-1.5.12.jar
+
 ssl: false
 nginx: true
 database: true

@@ -63,7 +63,7 @@
     - name: Generate MD5 hashed password
       expect:
         chdir: /var/lib/rundeck/bootstrap
-        command: java -jar rundeck-3.1.2-20190927.war --encryptpwd Jetty
+        command: java -jar rundeck*.war --encryptpwd Jetty
         responses:
             'Username \(Optional, but necessary for Crypt encoding\)': "{{ rd_admin_user }}"
             '\*Value To Encrypt \(The text you want to encrypt\)': "{{ rd_admin_pw }}"
@@ -85,7 +85,7 @@
 
     - name: Install AWS EC2 Nodes rundeck plugin
       get_url:
-        url: https://github.com/rundeck-plugins/rundeck-ec2-nodes-plugin/releases/download/v1.5.12/rundeck-ec2-nodes-plugin-1.5.12.jar
+        url: "{{ rd_ec2_plugin_url }}"
         dest: /var/lib/rundeck/libext/
         mode: 0644
       become: true
