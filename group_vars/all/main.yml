@@ -10,7 +10,7 @@ rd_admin_user: admin
 # PostgreSQL right now
 rd_db_name: rundeck
 rd_db_user: rundeckuser
-rd_db_password: rundeck 
+rd_db_password: rundeck
 
 # Rundeck config
 # Set internal url to localhost when using nginx, otherwise, use the machines IP
@@ -21,9 +21,6 @@ rd_external_url: ansible-test.vagrant.local
 
 # Port Rundeck runs on default: 4440
 rd_port: 4440
-
-# Rundeck web interface URL. Use external IP, localhost, or fqdn
-rd_grails_addr:
 
 # Rundeck project settings
 rd_project_name: "test"
