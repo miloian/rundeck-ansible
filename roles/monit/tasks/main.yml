@@ -14,7 +14,7 @@
         group: root
         mode: '0644'
       with_fileglob:
-        - files/monit/*
+        - ../files/*
 
     - name: Start monit
       service:

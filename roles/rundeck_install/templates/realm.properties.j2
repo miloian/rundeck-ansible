@@ -22,7 +22,7 @@
 #
 # This sets the default user accounts for the Rundeck app
 #
-{{ rd_admin_user }}:{{ rd_admin_pw }},user,admin,architect,deploy,build
+{{ rd_admin_user }}:{{ jetty_output.stdout_lines|string|regex_search('MD5:[a-zA-Z0-9]{32}') }},user,admin,architect,deploy,build
 
 #
 # example users matching the example aclpolicy template roles

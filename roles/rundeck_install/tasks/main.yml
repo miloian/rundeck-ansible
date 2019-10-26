@@ -53,16 +53,28 @@
 
     - name: Install Rundeck config.properties
       template:
-        src: templates/rundeck/rundeck-config.properties.j2
+        src: rundeck-config.properties.j2
         dest: /etc/rundeck/rundeck-config.properties
         owner: rundeck
         group: rundeck
         mode: 0640
         backup: yes
 
+    - name: Generate MD5 hashed password
+      expect:
+        chdir: /var/lib/rundeck/bootstrap
+        command: java -jar rundeck-3.1.2-20190927.war --encryptpwd Jetty
+        responses:
+            'Username \(Optional, but necessary for Crypt encoding\)': "{{ rd_admin_user }}"
+            '\*Value To Encrypt \(The text you want to encrypt\)': "{{ rd_admin_pw }}"
+        echo: yes
+      register: jetty_output
+      become: yes
+      become_user: rundeck
+
     - name: Install Rundeck realm.properties
       template:
-        src: templates/rundeck/realm.properties.j2
+        src: realm.properties.j2
         dest: /etc/rundeck/realm.properties
         owner: rundeck
         group: rundeck

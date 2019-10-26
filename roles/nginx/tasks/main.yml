@@ -8,7 +8,7 @@
 
     - name: Install nginx template
       template:
-        src: templates/nginx/rundeck.conf.j2
+        src: rundeck.conf.j2
         dest: /etc/nginx/conf.d/rundeck.conf
         owner: root
         group: root
